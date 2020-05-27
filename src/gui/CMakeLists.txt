@@ -89,17 +89,8 @@ AudioToolbox: ${AUDIOTOOLBOX_LIBRARY}")
     endif ()
         mark_as_advanced(FOUNDATION_LIBRARY COREAUDIO_LIBRARY AUDIOTOOLBOX_LIBRARY)
 elseif (LINUX)
-    if ((Qt5Core_VERSION VERSION_LESS 5.7.0) OR USE_APPINDICATOR_OVERRIDE OR "$ENV{QT_QPA_PLATFORMTHEME}" STREQUAL "gtk2" )
-        find_package(Appindicator)
-        if (Appindicator_FOUND)
-            target_compile_definitions(
-                ckb-next
-                    PRIVATE
-                        USE_LIBAPPINDICATOR)
-        endif ()
-    endif ()
     find_package(X11 REQUIRED)
-    find_package(Qt5 5.2.0 COMPONENTS X11Extras)
+    find_package(Qt5 5.2.0 COMPONENTS X11Extras DBus)
 endif ()
 
 # Automatically handle MOC, UIC and RCC
@@ -123,7 +114,6 @@ if (MACOS OR LINUX)
               autorun.cpp
               ckbsettings.cpp
               ckbsettingswriter.cpp
-              ckbsystemtrayicon.cpp
               ckbupdater.cpp
               ckbupdaterwidget.cpp
               colorbutton.cpp
@@ -267,6 +257,40 @@ elseif (LINUX)
         ckb-next
             PRIVATE
               media_linux.cpp)
+
+    if(USE_DBUS)
+        find_package(dbusmenu-qt5 CONFIG)
+        if(NOT dbusmenu-qt5_FOUND)
+            message(FATAL_ERROR "dbusmenu-qt5 was not found. Either install it or pass -DUSE_DBUS=0 to fall back to the default Qt tray icon.")
+        endif()
+        target_link_libraries(
+            ckb-next
+                PRIVATE
+                Qt5::DBus
+                dbusmenu-qt5
+        )
+        target_compile_definitions(
+        ckb-next
+            PRIVATE
+                USE_DBUS)
+
+        include_directories(${dbusmenu-qt5_INCLUDE_DIRS})
+        qt5_add_dbus_adaptor(statusNotifierAutogen "kstatusnotifier/org.kde.StatusNotifierItem.xml"
+            "kstatusnotifier/kstatusnotifieritemdbus_p.h" KStatusNotifierItemDBus)
+        qt5_add_dbus_interface(statusNotifierAutogen "kstatusnotifier/org.freedesktop.Notifications.xml" notifications_interface)
+        qt5_add_dbus_interface(statusNotifierAutogen "kstatusnotifier/org.kde.StatusNotifierWatcher.xml" statusnotifierwatcher_interface)
+        set_property(SOURCE ${statusNotifierAutogen} PROPERTY SKIP_AUTOGEN ON)
+        target_sources(
+            ckb-next
+                PRIVATE
+                  kstatusnotifier/kstatusnotifieritem.cpp
+                  kstatusnotifier/kstatusnotifieritemdbus_p.cpp
+                  kstatusnotifier/kstatusnotifieritemdbus_p.h
+                  kstatusnotifier/kstatusnotifieritem.h
+                  kstatusnotifier/kstatusnotifieritemprivate_p.h
+                  ckbsystemtrayicon.cpp
+                  ${statusNotifierAutogen})
+    endif()
 endif ()
 
 if (MAC_LEGACY)

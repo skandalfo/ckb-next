@@ -104,6 +104,7 @@ cmake_dependent_option(WITH_PIPE     "Build with 'Pipe' animation."     ON "WITH
 if (LINUX)
     cmake_dependent_option(WITH_MVIZ  "Build with music visualizer."           ON "WITH_ANIMATIONS;WITH_GUI" OFF)
     cmake_dependent_option(USE_XCB    "Build with features that require XCB."  ON  "WITH_GUI" OFF)
+    cmake_dependent_option(USE_DBUS   "Build with DBus support for the tray."  ON  "WITH_GUI" OFF)
     option(USE_PORTAUDIO              "Use portaudio for music visualizer."    OFF)
 else ()
     cmake_dependent_option(WITH_MVIZ   "Build with music visualizer."          OFF "WITH_ANIMATIONS;WITH_GUI" OFF)
