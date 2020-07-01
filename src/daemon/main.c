@@ -121,6 +121,9 @@ void localecase(char* dst, size_t length, const char* src){
 }
 
 int main(int argc, char** argv){
+    // Scheduling priority
+    struct sched_param sched_prio = {10};
+
     // Set output pipes to buffer on newlines, if they weren't set that way already
     setlinebuf(stdout);
     setlinebuf(stderr);
@@ -241,6 +244,12 @@ int main(int argc, char** argv){
         } else
             ckb_warn_nofile("Warning: not running as root, allowing anyway per command-line parameter...\n");
     }
+
+    // Set the scheduling policy to SCHED_FIFO.
+    if(pthread_setschedparam(pthread_self(), SCHED_FIFO, &sched_prio))
+        ckb_warn_nofile("Warning: couldn't set scheduling policy\n");
+    else
+        ckb_info("Scheduling policy set\n");
 
     // Make root keyboard
     umask(0);
