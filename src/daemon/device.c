@@ -40,6 +40,8 @@ int queued_mutex_trylock(queued_mutex_t* mutex){
     }
 
     pthread_mutex_unlock(&mutex->mutex);
+
+    return res;
 }
 
 void queued_mutex_unlock(queued_mutex_t* mutex){
